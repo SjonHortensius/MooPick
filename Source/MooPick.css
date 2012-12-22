@@ -1,0 +1,118 @@
+/*
+	(C) 2012 Sjon Hortensius
+
+	This file is part of MooPick.
+
+	MooPick is free software: you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation, either version 3 of the License, or
+	(at your option) any later version.
+
+	MooPick is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
+.MooPickContainer
+{
+	position: relative;
+	font-family: Verdana, sans-serif;
+	font-size: 11px
+}
+
+.MooPickContainer.hidden
+{
+	display: none;
+}
+
+.MooPickContainer .palette
+{
+	background-image: url(gradient.png);
+	border: 1px solid black;
+	width: 256px;
+	height: 256px;
+}
+
+.MooPickContainer .cursor
+{
+	width: 5px;
+	height: 5px;
+	border: 1px solid black;
+}
+
+.MooPickContainer .palette,
+.MooPickContainer .cursor,
+.MooPickContainer .hue,
+.MooPickContainer .preview,
+.MooPickContainer fieldset
+{
+	position: absolute;
+}
+
+.MooPickContainer .hue
+{
+	background-image: url(hue.png);
+	border: 1px solid black;
+	width: 20px;
+	height: 256px;
+	left: 275px;
+	top: 0px;
+}
+
+.MooPickContainer .hueSlider
+{
+	border: 1px solid black;
+	width: 18px;
+	height: 5px;
+	display: block;
+	position: relative;
+}
+
+.MooPickContainer .preview
+{
+	width: 50px;
+	height: 50px;
+	border: 1px solid black;
+	left: 325px;
+	top: 0px;
+}
+
+.MooPickContainer fieldset
+{
+	left: 325px;
+	top: 75px;
+	width: 40px;
+	border: none;
+}
+
+.MooPickContainer input
+{
+	font-size: 11px;
+	width: 40px;
+}
+
+.MooPickContainer input:before
+{
+	content: attr(accesskey) ": ";
+}
+
+.MooPickContainer input[name=Hue]:after
+{
+	content: "°";
+}
+
+.MooPickContainer input[name=Hex]
+{
+	left: 325px;
+	top: 238px;
+	width: 50px;
+}
+
+.MooPickContainer input[name=Hue]:before
+{
+	content: "#";
+}
