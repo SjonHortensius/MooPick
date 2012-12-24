@@ -20,62 +20,43 @@
 var MooPick = new Class({
 	Implements: [Options, Events],
 	spaces: {
-		'rgb': ['red', 'green', 'blue'],
-		'hsb': ['hue', 'saturation', 'brightness'],
-		'hex': ['hex'],
+		'rgb': ['Red', 'Green', 'Blue'],
+		'hsb': ['Hue', 'Saturation', 'Brightness'],
+		'hex': ['Hex'],
 	},
 	options: {
 		namespace: 'MooPick',
 		defaultValue: 'f60',
+		defaultValueSpace: 'hex',
 	},
 	container: null,
 
 	initialize: function(options)
 	{
 		if ('undefined' == typeof Color)
-			throw new Exception('MooPick requires Color from MooTools More');
+			throw new Error('MooPick requires Color from MooTools More');
 
 		this.setOptions(options);
 		this._create(this.options.namespace);
-		this.set(this.options.defaultValue, 'hex');
+		this.set(this.options.defaultValue, this.defaultValueSpace);
 	},
 
 	_create: function(namespace)
 	{
 		this.container = new Element('div', {'class': namespace+'Container hidden'});
-		
-		var palette = new Element('div', {'class': 'palette'});
-		var cursor = new Element('span', {'class': 'cursor'});
-		palette.addEvent('click', function(e){
-			var x = e.client.x - palette.getPosition().x, s = x / palette.clientWidth * 100;
-			this.container.getElement('input[name=saturation]').set('value', Math.round(s)).fireEvent('change', e);
-			var y = e.client.y - palette.getPosition().y, b = 100 - y / palette.clientHeight * 100;
-			this.container.getElement('input[name=brightness]').set('value', Math.round(b)).fireEvent('change', e);
+		this.container.grab(new Element('div', {'class': 'background'}));
 
-			cursor.setStyles({
-				left: x - cursor.clientWidth,
-				top: y - cursor.clientHeight,
-			});
-		}.bind(this));
-		this.container.grab(palette.grab(cursor));
+		new MooPick.Palette().inject(this.container);
+		new MooPick.Hue().inject(this.container);
 
-		var slider = new Element('span', {'class': 'hueSlider'});
-		var hue = new Element('div', {'class': 'hue'}).grab(slider);
-		hue.addEvent('click', function(e){
-			var y = e.client.y - hue.getPosition().y, h = 360 - y / hue.clientHeight * 360;
-			this.container.getElement('input[name=hue]').set('value', Math.round(h)).fireEvent('change', e);
-			slider.setStyle('top', Math.min(Math.max(y-slider.clientHeight, 0), hue.clientHeight));
-		}.bind(this));
-
-		this.container.grab(hue);
 		this.container.grab(new Element('div', {'class': 'preview'}));
-		var fieldset = new Element('fieldset');
+		var fieldset = new Element('fieldset'), input;
 
 		Object.each(this.spaces, function (inputs, space){
 			inputs.each(function(name)
 			{
-				input = new Element('input', {type: 'text', accessKey: name.substr(0, 1), name: name});
-				input.addEvent('change', function(e){ this.process(e.target, space); }.bind(this));
+				input = new MooPick.ValueInput(name, space);
+				input.addEvent('change', this.inputChanged.bind(this));
 				fieldset.grab(input);
 			}.bind(this));
 		}, this);
@@ -93,10 +74,13 @@ var MooPick = new Class({
 		return this.container.addClass('hidden');
 	},
 
-	process: function(input, space)
+	// When a single input has been changed, find other inputs for this space, and set new color
+	inputChanged: function(e)
 	{
+		var input = e.target, space = input.get('space');
+
 		if (!this.spaces[space])
-			throw new Exception('Unsupported colorspace: '+space);
+			throw new Error('Unsupported colorspace: '+space);
 
 		var value = [];
 		this.spaces[space].each(function (name){
@@ -119,7 +103,7 @@ var MooPick = new Class({
 
 		Object.each(this.spaces, function (inputs, space){
 			if ('hex' == space)
-				return this.container.getElement('input[name=hex]').value = this.value.hex;
+				return this.container.getElement('input[name=Hex]').value = this.value.hex;
 
 			inputs.each(function(name, idx)
 			{
@@ -132,7 +116,162 @@ var MooPick = new Class({
 	},
 });
 
-MooPick.TextInput = new Class({
+MooPick.Palette = new Class({
+	element: new Element('div', {'class': 'palette'}),
+	cursor: new Element('span', {'class': 'cursor'}),
+	container: null,
+
+	initialize: function()
+	{
+		this.element.addEvent('click', this.updateFields.bind(this));
+		this.element.addEvent('click', this.updateCursor.bind(this));
+
+		this.element.grab(this.cursor);
+	},
+
+	updateFields: function(e)
+	{
+		var x = e.client.x - this.element.getPosition().x, s = x / this.element.clientWidth * 100, input;
+		input = this.container.getElement('input[name=Saturation]').set('value', Math.round(s));
+		input.fireEvent('change', {target: input});
+
+		var y = e.client.y - this.element.getPosition().y, b = 100 - y / this.element.clientHeight * 100;
+		input = this.container.getElement('input[name=Brightness]').set('value', Math.round(b));
+		input.fireEvent('change', {target: input});
+	},
+
+	updateCursor: function(e)
+	{
+		this.cursor.setStyles({
+			left: e.client.x - this.element.getPosition().x - this.cursor.clientWidth,
+			top: e.client.y - this.element.getPosition().y - this.cursor.clientHeight,
+		});
+	},
+
+	inject:function(el, where)
+	{
+		this.element.inject(el, where);
+		this.container = el;
+
+		return this.element;
+	},
+
+	toElement: function()
+	{
+		return this.element;
+	}
+});
+
+MooPick.Hue = new Class({
+	element: new Element('div', {'class': 'hue'}),
+	slider: new Element('span', {'class': 'hueSlider'}),
+
+	initialize: function()
+	{
+		this.element.addEvent('click', this.updateFields.bind(this));
+
+		this.element.grab(this.slider);
+	},
+
+	updateFields: function(e)
+	{
+		var y = e.client.y - this.element.getPosition().y, h = 360 - y / this.element.clientHeight * 360, input;
+
+		input = this.container.getElement('input[name=Hue]').set('value', Math.round(h));
+		input.fireEvent('change', {target: input});
+
+		this.slider.setStyle('top', Math.min(Math.max(y-this.slider.clientHeight, 0), this.element.clientHeight));
+	},
+
+	inject:function(el, where)
+	{
+		this.element.inject(el, where);
+		this.container = el;
+
+		return this.element;
+	},
+
+	toElement: function()
+	{
+		return this.element;
+	}
+});
+
+MooPick.ValueInput = new Class({
+	Implements: [Events],
+	element: null,
+	max: {
+		Hue: 255,
+		Saturation: 100,
+		Brightness: 100
+	},
+
+	initialize: function(name, space)
+	{
+		var input, max = ('rgb' == space) ? 255 : ('hsb' == space) ? this.max[name] : null;
+		this.element = new Element('label', {title: name, for: name}).appendText(name.substr(0, 1).toUpperCase());
+
+		input = new Element('input', {
+			type: 'text',
+			accessKey: name.substr(0, 1),
+			name: name,
+			space: space,
+		});
+		input._handler = this;
+
+		if (max)
+			input.set('max', max);
+
+		this.element.grab(input, 'bottom');
+
+		input.addEvent('keydown', this.onKeyDown);
+		input.addEvent('mousewheel', this.onKeyDown);
+		input.addEvent('change', this.onChange.bind(this));
+	},
+
+	onKeyDown: function(e)
+	{
+		if ('mousewheel' == e.type)
+			e.key = e.wheel>0 ? 'up' : 'down';
+
+		if ('up' == e.key)
+			this.value++;
+		else if ('down' == e.key)
+			this.value--;
+		else
+			return;
+
+		this.fireEvent('change', {target: this});
+	},
+
+	// Check new value, correct overflow and fire event
+	onChange: function(e)
+	{
+		var input = this.element.getFirst('input');
+
+		if (input.get('max'))
+		{
+			if (isNaN(input.value.toInt()))
+				input.value = 0;
+			else
+				input.value = input.value.toInt();
+
+			if (input.value > input.get('max'))
+				input.value = input.value % input.get('max') - 1;
+			else if (input.value < 0)
+				input.value = input.get('max');
+		}
+
+		this.fireEvent('change', {target: input});
+	},
+
+	toElement: function()
+	{
+		return this.element;
+	}
+});
+
+MooPick.FromTextInput = new Class({
 	Extends: MooPick,
 	element: null,
 
@@ -145,7 +284,7 @@ MooPick.TextInput = new Class({
 
 		document.addEvent('click', this.hide.bind(this));
 
-		this.element.addEvent('change', function(e){ this.set(e.value, 'hex'); }.bind(this));
+		this.element.addEvent('change', function(e){ this.set(e.target.value, 'hex'); }.bind(this));
 		this.element.addEvent('click', function(e){ this.show(); e.stopPropagation(); }.bind(this));
 		this.container.addEvent('click', function(e){ e.stopPropagation(); }.bind(this));
 	},

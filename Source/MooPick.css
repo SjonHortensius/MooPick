@@ -21,7 +21,7 @@
 {
 	position: relative;
 	font-family: Verdana, sans-serif;
-	font-size: 11px
+	font-size: 11px;
 }
 
 .MooPickContainer.hidden
@@ -29,43 +29,68 @@
 	display: none;
 }
 
-.MooPickContainer .palette
-{
-	background-image: url(gradient.png);
-	border: 1px solid black;
-	width: 256px;
-	height: 256px;
-}
-
-.MooPickContainer .cursor
-{
-	width: 5px;
-	height: 5px;
-	border: 1px solid black;
-}
-
+.MooPickContainer .background,
 .MooPickContainer .palette,
 .MooPickContainer .cursor,
 .MooPickContainer .hue,
 .MooPickContainer .preview,
 .MooPickContainer fieldset
 {
+	border: 1px solid white;
+	border-radius: 3px;
 	position: absolute;
+}
+
+.MooPickContainer .palette,
+.MooPickContainer .hue,
+.MooPickContainer .preview
+{
+	top: 4px;
+}
+
+.MooPickContainer .background
+{
+	width: 380px;
+	height: 264px;
+	background-color: black;
+	opacity: 0.9;
+}
+
+.MooPickContainer .palette
+{
+	background-image: url(gradient.png);
+	border: 1px solid white;
+	width: 256px;
+	height: 256px;
+	border-radius: 3px;
+	left: 4px;
+}
+
+.MooPickContainer .cursor
+{
+	width: 5px;
+	height: 5px;
+}
+
+.MooPickContainer .cursor,
+.MooPickContainer .hueSlider
+{
+	border: 1px solid black;
+	background-color: white;
+	opacity: 0.5;
+	border-radius: 3px;
 }
 
 .MooPickContainer .hue
 {
 	background-image: url(hue.png);
-	border: 1px solid black;
 	width: 20px;
 	height: 256px;
 	left: 275px;
-	top: 0px;
 }
 
 .MooPickContainer .hueSlider
 {
-	border: 1px solid black;
 	width: 18px;
 	height: 5px;
 	display: block;
@@ -76,33 +101,33 @@
 {
 	width: 50px;
 	height: 50px;
-	border: 1px solid black;
 	left: 325px;
-	top: 0px;
 }
 
 .MooPickContainer fieldset
 {
-	left: 325px;
-	top: 75px;
-	width: 40px;
+	margin: 0;
+	padding: 0;
+	left: 300px;
+	top: 80px;
+	width: 75px;
 	border: none;
+	text-align: right;
+}
+
+.MooPickContainer label
+{
+	color: white;
+	display: block;
 }
 
 .MooPickContainer input
 {
 	font-size: 11px;
-	width: 40px;
-}
-
-.MooPickContainer input:before
-{
-	content: attr(accesskey) ": ";
-}
-
-.MooPickContainer input[name=Hue]:after
-{
-	content: "°";
+	text-align: right;
+	width: 25px;
+	padding: 2px;
+	margin-left: 3px;
 }
 
 .MooPickContainer input[name=Hex]
@@ -112,7 +137,7 @@
 	width: 50px;
 }
 
-.MooPickContainer input[name=Hue]:before
+.MooPickContainer label[for=Hex]:before
 {
 	content: "#";
 }
