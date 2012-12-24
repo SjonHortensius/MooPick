@@ -82,15 +82,15 @@ var MooPick = new Class({
 		if (!this.spaces[space])
 			throw new Error('Unsupported colorspace: '+space);
 
-		var value = [];
+		var values = [];
 		this.spaces[space].each(function (name){
-			value.push(name == input.get('name') ? input.value : this.container.getElement('input[name='+ name +']').value);
+			values.push(this.container.getElement('input[name='+ name +']').value);
 		}.bind(this));
 
 		if ('hex' == space)
-			value = value.pop();
+			values = values.pop();
 
-		this.set(value, space);
+		this.set(values, space);
 	},
 
 	set: function(color, type)
@@ -113,6 +113,8 @@ var MooPick = new Class({
 
 		this.container.getElement('.palette').setStyle('background-color', [this.value.hsb[0], 100, 100].hsbToRgb());
 		this.container.getElement('.preview').setStyle('background-color', this.value.hex);
+
+		this.fireEvent('change', {color: this.value});
 	},
 });
 
@@ -152,8 +154,6 @@ MooPick.Palette = new Class({
 	{
 		this.element.inject(el, where);
 		this.container = el;
-
-		return this.element;
 	},
 
 	toElement: function()
@@ -187,8 +187,6 @@ MooPick.Hue = new Class({
 	{
 		this.element.inject(el, where);
 		this.container = el;
-
-		return this.element;
 	},
 
 	toElement: function()
@@ -273,21 +271,22 @@ MooPick.ValueInput = new Class({
 	}
 });
 
-MooPick.FromTextInput = new Class({
+MooPick.HandleTextInput = new Class({
 	Extends: MooPick,
-	element: null,
+	input: null,
 
-	initialize: function(element, options)
+	initialize: function(input, options)
 	{
-		this.element = $(element);
-		this.options.defaultValue = this.element.value;
+		this.input = $(input);
+		this.options.defaultValue = this.input.value;
 
 		this.parent(options);
 
-		document.addEvent('click', this.hide.bind(this));
+		this.input.addEvent('change', function(e){ this.set(e.target.value, 'hex'); }.bind(this));
+		this.addEvent('change', function (e){ this.input.value = e.color.hex; }.bind(this));
 
-		this.element.addEvent('change', function(e){ this.set(e.target.value, 'hex'); }.bind(this));
-		this.element.addEvent('click', function(e){ this.show(); e.stopPropagation(); }.bind(this));
+		document.addEvent('click', this.hide.bind(this));
+		this.input.addEvent('click', function(e){ this.show(); e.stopPropagation(); }.bind(this));
 		this.container.addEvent('click', function(e){ e.stopPropagation(); }.bind(this));
 	},
 });
