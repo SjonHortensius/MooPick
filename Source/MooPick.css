@@ -136,8 +136,3 @@
 	top: 238px;
 	width: 50px;
 }
-
-.MooPickContainer label[for=Hex]:before
-{
-	content: "#";
-}

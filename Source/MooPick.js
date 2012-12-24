@@ -148,7 +148,7 @@ MooPick.Palette = new Class({
 		});
 	},
 
-	inject:function(el, where)
+	inject: function(el, where)
 	{
 		this.element.inject(el, where);
 		this.container = el;
@@ -183,7 +183,7 @@ MooPick.Hue = new Class({
 		this.slider.setStyle('top', Math.min(Math.max(y-this.slider.clientHeight, 0), this.element.clientHeight));
 	},
 
-	inject:function(el, where)
+	inject: function(el, where)
 	{
 		this.element.inject(el, where);
 		this.container = el;
@@ -217,7 +217,6 @@ MooPick.ValueInput = new Class({
 			name: name,
 			space: space,
 		});
-		input._handler = this;
 
 		if (max)
 			input.set('max', max);
@@ -261,6 +260,9 @@ MooPick.ValueInput = new Class({
 			else if (input.value < 0)
 				input.value = input.get('max');
 		}
+
+		if ('hex' == input.get('space') && !input.value.match(/^#[0-9a-f]{3,6}$/))
+			input.value = '#000';
 
 		this.fireEvent('change', {target: input});
 	},
