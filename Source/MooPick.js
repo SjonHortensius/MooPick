@@ -33,23 +33,23 @@ var MooPick = new Class({
 
 	initialize: function(options)
 	{
-		if ('undefined' == typeof Color)
-			throw new Error('MooPick requires Color from MooTools More');
+		if ('undefined' == typeof Color || 'undefined' == typeof Drag)
+			throw new Error('MooPick requires Color and Drag from MooTools More');
 
 		this.setOptions(options);
-		this._create(this.options.namespace);
+		this._create();
 		this.set(this.options.defaultValue, this.defaultValueSpace);
 	},
 
-	_create: function(namespace)
+	_create: function()
 	{
-		this.container = new Element('div', {'class': namespace+'Container hidden'});
-		this.container.grab(new Element('div', {'class': 'background'}));
+		this.container = new Element('div', {'class': this.options.namespace+'Container hidden'});
+		new Element('div', {'class': 'background'}).inject(this.container);
 
 		new MooPick.Palette().inject(this.container);
 		new MooPick.Hue().inject(this.container);
 
-		this.container.grab(new Element('div', {'class': 'preview'}));
+		new Element('div', {'class': 'preview'}).inject(this.container);
 		var fieldset = new Element('fieldset'), input;
 
 		Object.each(this.spaces, function (inputs, space){
@@ -60,7 +60,9 @@ var MooPick = new Class({
 				fieldset.grab(input);
 			}.bind(this));
 		}, this);
-		this.container.grab(fieldset);
+
+		fieldset.inject(this.container);
+
 		document.body.grab(this.container);
 	},
 
@@ -119,12 +121,14 @@ var MooPick = new Class({
 });
 
 MooPick.Palette = new Class({
-	element: new Element('div', {'class': 'palette'}),
-	cursor: new Element('span', {'class': 'cursor'}),
+	element: null,
+	cursor: null,
 	container: null,
 
 	initialize: function()
 	{
+		this.element = new Element('div', {'class': 'palette'});
+		this.cursor = new Element('span', {'class': 'cursor'});
 		this.element.addEvent('click', this.updateFields.bind(this));
 		this.element.addEvent('click', this.updateCursor.bind(this));
 
@@ -163,19 +167,22 @@ MooPick.Palette = new Class({
 });
 
 MooPick.Hue = new Class({
-	element: new Element('div', {'class': 'hue'}),
-	slider: new Element('span', {'class': 'hueSlider'}),
+	element: null,
+	slider: null,
 
 	initialize: function()
 	{
-		this.element.addEvent('click', this.updateFields.bind(this));
-
+		this.element = new Element('div', {'class': 'hue'});
+		this.slider = new Element('span', {'class': 'hueSlider'});
 		this.element.grab(this.slider);
+
+		this.element.addEvent('click', this.updateFields.bind(this));
 	},
 
 	updateFields: function(e)
 	{
-		var y = e.client.y - this.element.getPosition().y, h = 360 - y / this.element.clientHeight * 360, input;
+		var y = (e.client ? e.client.y : this.slider.getPosition().y) - this.element.getPosition().y,
+			h = 360 - (y/this.element.clientHeight) * 360, input;
 
 		input = this.container.getElement('input[name=Hue]').set('value', Math.round(h));
 		input.fireEvent('change', {target: input});
@@ -187,6 +194,14 @@ MooPick.Hue = new Class({
 	{
 		this.element.inject(el, where);
 		this.container = el;
+
+		new Drag(this.slider, {
+			snap: 0,
+			limit: {
+				x: [0, 0],
+				y: [0, 253],
+			}
+		}).addEvent('drag', this.updateFields.bind(this));
 	},
 
 	toElement: function()
@@ -199,7 +214,7 @@ MooPick.ValueInput = new Class({
 	Implements: [Events],
 	element: null,
 	max: {
-		Hue: 255,
+		Hue: 366,
 		Saturation: 100,
 		Brightness: 100
 	},
