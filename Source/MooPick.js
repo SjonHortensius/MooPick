@@ -129,29 +129,24 @@ MooPick.Palette = new Class({
 	{
 		this.element = new Element('div', {'class': 'palette'});
 		this.cursor = new Element('span', {'class': 'cursor'});
-		this.element.addEvent('click', this.updateFields.bind(this));
-		this.element.addEvent('click', this.updateCursor.bind(this));
 
+		this.element.addEvent('click', this.set.bind(this));
 		this.element.grab(this.cursor);
 	},
 
-	updateFields: function(e)
+	set: function(e)
 	{
-		var x = e.client.x - this.element.getPosition().x, s = x / this.element.clientWidth * 100, input;
-		input = this.container.getElement('input[name=Saturation]').set('value', Math.round(s));
-		input.fireEvent('change', {target: input});
+		var x = e.page.x - this.element.getPosition().x, y = e.page.y - this.element.getPosition().y,
+			inputSaturation = this.container.getElement('input[name=Saturation]'),
+			inputBrightness = this.container.getElement('input[name=Brightness]');
 
-		var y = e.client.y - this.element.getPosition().y, b = 100 - y / this.element.clientHeight * 100;
-		input = this.container.getElement('input[name=Brightness]').set('value', Math.round(b));
-		input.fireEvent('change', {target: input});
-	},
+		inputSaturation.set('value', Math.round(x / this.element.clientWidth * 100));
+		inputSaturation.fireEvent('change', {target: inputSaturation});
 
-	updateCursor: function(e)
-	{
-		this.cursor.setStyles({
-			left: e.client.x - this.element.getPosition().x - this.cursor.clientWidth,
-			top: e.client.y - this.element.getPosition().y - this.cursor.clientHeight,
-		});
+		inputBrightness.set('value', Math.round(100 - y / this.element.clientHeight * 100));
+		inputBrightness.fireEvent('change', {target: inputBrightness});
+
+		this.cursor.setStyles({left: x - this.cursor.clientWidth, top: y - this.cursor.clientHeight});
 	},
 
 	inject: function(el, where)
@@ -176,12 +171,12 @@ MooPick.Hue = new Class({
 		this.slider = new Element('span', {'class': 'hueSlider'});
 		this.element.grab(this.slider);
 
-		this.element.addEvent('click', this.updateFields.bind(this));
+		this.element.addEvent('click', this.set.bind(this));
 	},
 
-	updateFields: function(e)
+	set: function(e)
 	{
-		var y = (e.client ? e.client.y : this.slider.getPosition().y) - this.element.getPosition().y,
+		var y = (e.page ? e.page.y : this.slider.getPosition().y) - this.element.getPosition().y,
 			h = 360 - (y/this.element.clientHeight) * 360, input;
 
 		input = this.container.getElement('input[name=Hue]').set('value', Math.round(h));
@@ -201,7 +196,7 @@ MooPick.Hue = new Class({
 				x: [0, 0],
 				y: [0, 253],
 			}
-		}).addEvent('drag', this.updateFields.bind(this));
+		}).addEvent('drag', this.set.bind(this));
 	},
 
 	toElement: function()
@@ -222,7 +217,7 @@ MooPick.ValueInput = new Class({
 	initialize: function(name, space)
 	{
 		var input, max = ('rgb' == space) ? 255 : ('hsb' == space) ? this.max[name] : null;
-		this.element = new Element('label', {title: name, for: name}).appendText(name.substr(0, 1).toUpperCase());
+		this.element = new Element('label', {title: name, 'for': name}).appendText(name.substr(0, 1).toUpperCase());
 
 		input = new Element('input', {
 			type: 'text',
